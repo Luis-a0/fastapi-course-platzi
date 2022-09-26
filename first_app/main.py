@@ -8,6 +8,7 @@ from pydantic import Field
 
 #FastAPI
 from fastapi import FastAPI
+from fastapi import status
 from fastapi import Body, Query, Path
 
 app = FastAPI()
@@ -26,75 +27,63 @@ class Location(BaseModel):
     state: str
     country: str
 
-class Person(BaseModel): 
+class PersonBase(BaseModel): 
     first_name: str = Field(
-        ..., 
         min_length=1,
         max_length=50,
-        example="Miguel"
+        example="Marcos"
         )
     last_name: str = Field(
-        ..., 
         min_length=1,
         max_length=50,
-        example="Torres"
+        example="Alvarez"
         )
     age: int = Field(
-        ...,
         gt=0,
         le=115,
-        example=25
+        example=15
     )
     hair_color: Optional[HairColor] = Field(default=None, example=HairColor.black)
     is_married: Optional[bool] = Field(default=None, example=False)
-    password: str = Field(..., min_length=8)
 
     # class Config: 
     #     schema_extra = {
     #         "example": {
-    #             "first_name": "Facundo",
-    #             "last_name": "García Martoni",
-    #             "age": 21, 
-    #             "hair_color": "blonde",
+    #             "first_name": "Luis",
+    #             "last_name": "Aviles Altamar",
+    #             "age": 27, 
+    #             "hair_color": "brown",
     #             "is_married": False
     #         }
     #     }
 
+class Person(PersonBase):
+    password: str = Field(min_length=8, example="Cont4aseña1234")
 class PersonOut(BaseModel): 
-    first_name: str = Field(
-        ..., 
-        min_length=1,
-        max_length=50,
-        example="Miguel"
-        )
-    last_name: str = Field(
-        ..., 
-        min_length=1,
-        max_length=50,
-        example="Torres"
-        )
-    age: int = Field(
-        ...,
-        gt=0,
-        le=115,
-        example=25
-    )
-    hair_color: Optional[HairColor] = Field(default=None, example=HairColor.black)
-    is_married: Optional[bool] = Field(default=None, example=False)
+    pass
 
-@app.get("/")
+
+
+@app.get(
+    "/",
+    status_code=status.HTTP_200_OK)
 def home(): 
     return {"Hello": "World"}
 
 # Request and Response Body
 
-@app.post("/person/new", response_model=PersonOut)
-def create_person(person: Person = Body(...)): 
+@app.post(
+    "/person/new",
+    response_model=PersonOut,
+    status_code=status.HTTP_201_CREATED)
+def create_person(person: Person = Body()): 
     return person
 
 # Validaciones: Query Parameters
 
-@app.get("/person/detail")
+@app.get(
+    "/person/detail",
+    status_code=status.HTTP_200_OK)
 def show_person(
     name: Optional[str] = Query(
         None,
@@ -105,7 +94,6 @@ def show_person(
         example="Rocío"
         ),
     age: str = Query(
-        ...,
         title="Person Age",
         description="This is the person age. It's required",
         example=25
@@ -115,10 +103,11 @@ def show_person(
 
 # Validaciones: Path Parameters
 
-@app.get("/person/detail/{person_id}")
+@app.get(
+    "/person/detail/{person_id}",
+    status_code=status.HTTP_200_OK)
 def show_person(
     person_id: int = Path(
-        ..., 
         gt=0,
         example=123
         )
@@ -127,17 +116,18 @@ def show_person(
 
 # Validaciones: Request Body
 
-@app.put("/person/{person_id}")
+@app.put(
+    "/person/{person_id}",
+    status_code=status.HTTP_202_ACCEPTED)
 def update_person(
     person_id: int = Path(
-        ...,
         title="Person ID",
         description="This is the person ID",
         gt=0,
         example=123
     ),
-    person: Person = Body(...),
-    #location: Location = Body(...)
+    person: Person = Body(),
+    #location: Location = Body()
 ): 
     #results = person.dict()
     #results.update(location.dict())
